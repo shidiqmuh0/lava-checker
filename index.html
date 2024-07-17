@@ -38,37 +38,42 @@
             color: green;
         }
         /* Credits */
-#credits {
-    text-align: center;
-    margin-top: 20px;
-}
+        #credits {
+            text-align: center;
+            margin-top: 20px;
+        }
 
-#credits p {
-    font-size: 18px;
-    color: #666;
-}
+        #credits p {
+            font-size: 18px;
+            color: #666;
+        }
 
-#credits a {
-    color: #4CAF50;
-    text-decoration: none;
-}
+        #credits a {
+            color: #4CAF50;
+            text-decoration: none;
+        }
 
-#credits a:hover {
-    text-decoration: underline;
-}
+        #credits a:hover {
+            text-decoration: underline;
+        }
+
+        #keplrButton, #copyAddressButton {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
+            <button id="keplrButton" onclick="connectKeplr()">Connect to Keplr</button>
+            <button id="copyAddressButton" onclick="copyAddress()" style="display: none;">Copy Address</button>
         </div>
         <h1>Lava Check Address Eligibility</h1>
         <input type="text" id="addressInput" placeholder="Enter address">
         <button onclick="checkAddress()">Check</button>
         <div id="result"></div>
-        <br>
-        <button id="keplrButton" onclick="connectKeplr()">Connect to Keplr</button>
-        <button id="copyAddressButton" onclick="copyAddress()" style="display: none;">Copy Address</button>
         <div id="credits">
             <p>Developed by Shidiq <a href="https://twitter.com/shdqm0" target="_blank">Twitter</a> and <a href="https://github.com/shidiqmuh0" target="_blank">GitHub</a></p>
         </div>
@@ -99,11 +104,18 @@
             }
 
             const chainId = "lava-testnet-2";
+            const rpcEndpoints = [
+                "https://lava-testnet.rpc.kjnodes.com",
+                "https://api.lava.aknodes.net",
+                "https://lava-testnet-api.polkachu.com",
+                "https://lava.api.t.stavr.tech",
+                "https://lava-testnet.api.stakevillage.net"
+            ];
 
             const chainInfo = {
                 chainId: chainId,
                 chainName: "lava-testnet",
-                rpc: "https://lava-testnet.rpc.kjnodes.com",
+                rpc: rpcEndpoints[0],  // Start with the first RPC endpoint
                 rest: "https://lava-testnet.api.kjnodes.com",
                 bip44: {
                     coinType: 118
@@ -152,25 +164,31 @@
                 features: []
             };
 
-            try {
-                // Enable Keplr.
-                await window.keplr.enable(chainId);
+            for (const rpc of rpcEndpoints) {
+                try {
+                    // Suggest the chain if it's not already added in Keplr.
+                    chainInfo.rpc = rpc;
+                    await window.keplr.experimentalSuggestChain(chainInfo);
 
-                // Suggest the chain if it's not already added in Keplr.
-                await window.keplr.experimentalSuggestChain(chainInfo);
+                    // Enable Keplr.
+                    await window.keplr.enable(chainId);
 
-                alert("Connected to Keplr and chain information added.");
-                document.getElementById('keplrButton').style.display = 'none';
-                document.getElementById('copyAddressButton').style.display = 'inline';
+                    alert("Connected to Keplr and chain information added.");
+                    document.getElementById('keplrButton').style.display = 'none';
+                    document.getElementById('copyAddressButton').style.display = 'inline';
 
-                // Get the address and save it for later use
-                const offlineSigner = window.getOfflineSigner(chainId);
-                const accounts = await offlineSigner.getAccounts();
-                window.lavaAddress = accounts[0].address;
+                    // Get the address and save it for later use
+                    const offlineSigner = window.getOfflineSigner(chainId);
+                    const accounts = await offlineSigner.getAccounts();
+                    window.lavaAddress = accounts[0].address;
 
-            } catch (error) {
-                alert(`Failed to connect to Keplr: ${error.message}`);
+                    return; // Exit the function after a successful connection
+                } catch (error) {
+                    console.warn(`Failed to connect to RPC ${rpc}: ${error.message}`);
+                }
             }
+
+            alert("Failed to connect to all RPC endpoints. Please try again later.");
         }
 
         function copyAddress() {
