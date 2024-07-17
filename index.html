@@ -4,59 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lava Address Eligibility Checker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
-        .container {
-            text-align: center;
-            position: relative;
-            width: 100%;
-        }
-        .header {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-        }
-        input {
-            padding: 10px;
-            font-size: 16px;
-        }
-        button {
-            padding: 10px;
-            font-size: 16px;
-            margin-left: 10px;
-        }
-        #result {
-            margin-top: 20px;
-            font-size: 18px;
-            color: green;
-        }
-        /* Credits */
-        #credits {
-            text-align: center;
-            margin-top: 20px;
-        }
-
-        #credits p {
-            font-size: 18px;
-            color: #666;
-        }
-
-        #credits a {
-            color: #4CAF50;
-            text-decoration: none;
-        }
-
-        #credits a:hover {
-            text-decoration: underline;
-        }
-
         #keplrButton, #copyAddressButton {
             position: fixed;
             top: 10px;
@@ -64,18 +13,18 @@
         }
     </style>
 </head>
-<body>
-    <div class="container">
-        <div class="header">
-            <button id="keplrButton" onclick="connectKeplr()">Connect to Keplr</button>
-            <button id="copyAddressButton" onclick="copyAddress()" style="display: none;">Copy Address</button>
+<body class="flex items-center justify-center h-screen">
+    <div class="container text-center relative w-full">
+        <div class="header absolute top-2 right-2">
+            <button id="keplrButton" onclick="connectKeplr()" class="bg-blue-500 text-white py-2 px-4 rounded">Connect to Keplr</button>
+            <button id="copyAddressButton" onclick="copyAddress()" class="bg-green-500 text-white py-2 px-4 rounded hidden">Copy Address</button>
         </div>
-        <h1>Lava Check Address Eligibility</h1>
-        <input type="text" id="addressInput" placeholder="Enter address">
-        <button onclick="checkAddress()">Check</button>
-        <div id="result"></div>
-        <div id="credits">
-            <p>Developed by Shidiq <a href="https://twitter.com/shdqm0" target="_blank">Twitter</a> and <a href="https://github.com/shidiqmuh0" target="_blank">GitHub</a></p>
+        <h1 class="text-2xl font-bold mb-4">Lava Check Address Eligibility</h1>
+        <input type="text" id="addressInput" placeholder="Enter address" class="border p-2 text-lg">
+        <button onclick="checkAddress()" class="bg-blue-500 text-white py-2 px-4 ml-2 rounded">Check</button>
+        <div id="result" class="mt-4 text-lg"></div>
+        <div id="credits" class="mt-4 text-lg text-gray-600">
+            <p>Developed by Shidiq <a href="https://twitter.com/shdqm0" target="_blank" class="text-blue-500">Twitter</a> and <a href="https://github.com/shidiqmuh0" target="_blank" class="text-blue-500">GitHub</a></p>
         </div>
     </div>
 
@@ -90,10 +39,12 @@
 
             if (isEligible) {
                 resultElement.textContent = 'Address is eligible';
-                resultElement.style.color = 'green';
+                resultElement.classList.remove('text-red-500');
+                resultElement.classList.add('text-green-500');
             } else {
                 resultElement.textContent = 'Address is not eligible';
-                resultElement.style.color = 'red';
+                resultElement.classList.remove('text-green-500');
+                resultElement.classList.add('text-red-500');
             }
         }
 
@@ -174,8 +125,8 @@
                     await window.keplr.enable(chainId);
 
                     alert("Connected to Keplr and chain information added.");
-                    document.getElementById('keplrButton').style.display = 'none';
-                    document.getElementById('copyAddressButton').style.display = 'inline';
+                    document.getElementById('keplrButton').classList.add('hidden');
+                    document.getElementById('copyAddressButton').classList.remove('hidden');
 
                     // Get the address and save it for later use
                     const offlineSigner = window.getOfflineSigner(chainId);
