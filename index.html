@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lava Address Eligibility Checker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            text-align: center;
+            position: relative;
+            width: 100%;
+        }
+        .header {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+        }
+        input {
+            padding: 10px;
+            font-size: 16px;
+        }
+        button {
+            padding: 10px;
+            font-size: 16px;
+            margin-left: 10px;
+        }
+        #result {
+            margin-top: 20px;
+            font-size: 18px;
+            color: green;
+        }
+        /* Credits */
+#credits {
+    text-align: center;
+    margin-top: 20px;
+}
+
+#credits p {
+    font-size: 18px;
+    color: #666;
+}
+
+#credits a {
+    color: #4CAF50;
+    text-decoration: none;
+}
+
+#credits a:hover {
+    text-decoration: underline;
+}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+        </div>
+        <h1>Lava Check Address Eligibility</h1>
+        <input type="text" id="addressInput" placeholder="Enter address">
+        <button onclick="checkAddress()">Check</button>
+        <div id="result"></div>
+        <br>
+        <button id="keplrButton" onclick="connectKeplr()">Connect to Keplr</button>
+        <button id="copyAddressButton" onclick="copyAddress()" style="display: none;">Copy Address</button>
+        <div id="credits">
+            <p>Developed by Shidiq <a href="https://twitter.com/shdqm0" target="_blank">Twitter</a> and <a href="https://github.com/shidiqmuh0" target="_blank">GitHub</a></p>
+        </div>
+    </div>
+
+    <script>
+        async function checkAddress() {
+            const response = await fetch('output.json');
+            const data = await response.json();
+            const addressInput = document.getElementById('addressInput').value;
+            const resultElement = document.getElementById('result');
+
+            const isEligible = data.some(entry => entry.address === addressInput);
+
+            if (isEligible) {
+                resultElement.textContent = 'Address is eligible';
+                resultElement.style.color = 'green';
+            } else {
+                resultElement.textContent = 'Address is not eligible';
+                resultElement.style.color = 'red';
+            }
+        }
+
+        async function connectKeplr() {
+            if (!window.keplr) {
+                alert("Please install Keplr extension");
+                return;
+            }
+
+            const chainId = "lava-testnet-2";
+
+            const chainInfo = {
+                chainId: chainId,
+                chainName: "lava-testnet",
+                rpc: "https://lava-testnet.rpc.kjnodes.com",
+                rest: "https://lava-testnet.api.kjnodes.com",
+                bip44: {
+                    coinType: 118
+                },
+                coinType: 118,
+                bech32Config: {
+                    bech32PrefixAccAddr: "lava@",
+                    bech32PrefixAccPub: "lava@pub",
+                    bech32PrefixValAddr: "lava@valoper",
+                    bech32PrefixValPub: "lava@valoperpub",
+                    bech32PrefixConsAddr: "lava@valcons",
+                    bech32PrefixConsPub: "lava@valconspub"
+                },
+                currencies: [
+                    {
+                        coinDenom: "LAVA",
+                        coinMinimalDenom: "ulava",
+                        coinDecimals: 6,
+                        coinGeckoId: "unknown"
+                    }
+                ],
+                feeCurrencies: [
+                    {
+                        coinDenom: "LAVA",
+                        coinMinimalDenom: "ulava",
+                        coinDecimals: 6,
+                        coinGeckoId: "unknown",
+                        gasPriceStep: {
+                            low: 0.01,
+                            average: 0.025,
+                            high: 0.03
+                        }
+                    }
+                ],
+                gasPriceStep: {
+                    low: 0.01,
+                    average: 0.025,
+                    high: 0.03
+                },
+                stakeCurrency: {
+                    coinDenom: "LAVA",
+                    coinMinimalDenom: "ulava",
+                    coinDecimals: 6,
+                    coinGeckoId: "unknown"
+                },
+                features: []
+            };
+
+            try {
+                // Enable Keplr.
+                await window.keplr.enable(chainId);
+
+                // Suggest the chain if it's not already added in Keplr.
+                await window.keplr.experimentalSuggestChain(chainInfo);
+
+                alert("Connected to Keplr and chain information added.");
+                document.getElementById('keplrButton').style.display = 'none';
+                document.getElementById('copyAddressButton').style.display = 'inline';
+
+                // Get the address and save it for later use
+                const offlineSigner = window.getOfflineSigner(chainId);
+                const accounts = await offlineSigner.getAccounts();
+                window.lavaAddress = accounts[0].address;
+
+            } catch (error) {
+                alert(`Failed to connect to Keplr: ${error.message}`);
+            }
+        }
+
+        function copyAddress() {
+            const address = window.lavaAddress;
+            navigator.clipboard.writeText(address).then(() => {
+                alert('Address copied to clipboard: ' + address);
+            }).catch(err => {
+                alert('Failed to copy address: ', err);
+            });
+        }
+    </script>
+</body>
+</html>
